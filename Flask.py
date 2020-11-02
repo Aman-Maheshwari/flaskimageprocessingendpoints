@@ -68,8 +68,12 @@ def cartoon (image):
 def sketch(frame,param):	
 	print(frame)
 	img = cv2.imread(frame)
-	res , dst_color = cv2.pencilSketch(img, sigma_s=60, sigma_r=0.03, shade_factor=param)
+	# img = cv2.GaussianBlur(img,(3,3),cv2.BORDER_DEFAULT)
+	# img = cv2.resize(img, (160, 200)) 
+	res , dst_color = cv2.pencilSketch(img, sigma_s=30, sigma_r=0.06, shade_factor=param)
 	res = cv2.resize(res, (960, 540)) 
+	# sharpen_kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+	# res = cv2.filter2D(res, -1, sharpen_kernel)
 	return res
 
 
@@ -82,6 +86,7 @@ def sketchColor(frame,param):
 	img = cv2.imread(frame)
 	res , dst_color = cv2.pencilSketch(img, sigma_s=30, sigma_r=0.03, shade_factor=param)
 	dst_color = cv2.resize(dst_color, (960, 540)) 
+	
 	return dst_color
 
 
@@ -124,6 +129,9 @@ def glassFilter(filename):
 	gray=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 	print(gray)
 	fl=face.detectMultiScale(gray)
+	if(len(fl) == 0):
+		return "could not detect the face !!"
+
 	glass=cv2.imread('./FilterMask/glass1.png')
 	print("1")
 	def put_glass(glass, fc, x, y, w, h):
@@ -184,7 +192,9 @@ def catFilter(filename):
 		print(frame)
 	print("3\n")
 	t2 = cv2.getTickCount()
-	frame = cv2.resize(frame, (160, 200)) 
+	frame = cv2.resize(frame, (160, 160)) 
+	sharpen_kernel = np.array([[0,-1,0], [-1,5,-1], [0,-1,0]])
+	frame = cv2.filter2D(frame, -1, sharpen_kernel)
 	print("time taken = ",(t2-t1)/cv2.getTickFrequency())
 	return frame
 
