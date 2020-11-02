@@ -22,11 +22,11 @@ app =Flask(__name__)
 app.config["DEBUG"] = True
 
 
-def cartoon (image):
+def cartoon (image,param):
 	print(image)
 	img = cv2.imread(image)	
 	num_down = 3      	# number of downsampling steps
-	num_bilateral = 18  # number of bilateral filtering steps
+	num_bilateral = param  # number of bilateral filtering steps
 	img_rgb = img
 	# downsample image using Gaussian pyramid
 	
@@ -78,6 +78,16 @@ def sketch(frame,param):
 
 
 	#####################################################################################################################
+def waterColour(frame,param):	
+	print(frame)
+	img = cv2.imread(frame)
+	# img = cv2.GaussianBlur(img,(3,3),cv2.BORDER_DEFAULT)
+	# img = cv2.resize(img, (160, 200)) 
+	res = cv2.stylization(img, sigma_s=40, sigma_r=param)
+	res = cv2.resize(res, (160, 200)) 
+	# sharpen_kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
+	# res = cv2.filter2D(res, -1, sharpen_kernel)
+	return res
 
 
 
@@ -92,11 +102,11 @@ def sketchColor(frame,param):
 
 	#####################################################################################################################
 
-def oilPaint(image):
+def oilPaint(image,param):
 	img = cv2.imread(image)
 	#first numeric argumet ko variable rakhna hai !! app mai ... jitna jyda utnaa jyda stroke hoga
 	#second numeric argument ko variable rakhna hai !! app mai ... jinta jya uthna false counters aaengy 
-	res = cv2.xphoto.oilPainting(img, 18, 5)
+	res = cv2.xphoto.oilPainting(img,param, 5)
 	res = cv2.resize(res, (960, 540)) 
 	return res
 
@@ -240,10 +250,10 @@ def dog(filename):
 	######################################################################################################################
 
 
-def Pointillism(image):
+def Pointillism(image,param):
 	parser = argparse.ArgumentParser(description='...')
 	parser.add_argument('--palette-size', default=20, type=int, help="Number of colors of the base palette")
-	parser.add_argument('--stroke-scale', default=10, type=int, help="Scale of the brush strokes (0 = automatic)")
+	parser.add_argument('--stroke-scale', default=param, type=int, help="Scale of the brush strokes (0 = automatic)")
 	parser.add_argument('--gradient-smoothing-radius', default=2, type=int, help="Radius of the smooth filter applied to the gradient (0 = automatic)")
 	parser.add_argument('--limit-image-size', default=0, type=int, help="Limit the image size (0 = no limits)")
 	parser.add_argument('img_path', nargs='?', default=image)
@@ -339,7 +349,7 @@ def getDATAWatercolour():
 	param = request.json['parameter']
 	HelperFunction(x)
 	filename = "reconstructed.jpg"
-	opImg = cartoon(filename,param)
+	opImg = waterColour(filename,param)
 	op2_img = cv2.cvtColor(opImg, cv2.COLOR_RGB2BGR)
 	filename = "reconstructed1.jpg"
 	cv2.imwrite(filename, opImg)
@@ -354,6 +364,22 @@ def getDataPencilSketch():
 	filename = "reconstructed.jpg"
 	HelperFunction(x)
 	opImg = sketch(filename,param)
+	op2_img = cv2.cvtColor(opImg, cv2.COLOR_RGB2BGR)
+	filename = "reconstructed1.jpg"
+	cv2.imwrite(filename, op2_img)
+	return send_file(filename,as_attachment=True,mimetype='image/jpg')
+
+
+######################################################################################################################
+
+
+@app.route('/cartoon',methods = ['POST'])
+def getDataCartoon():
+	x=request.json['base64String']
+	param = request.json['parameter']
+	filename = "reconstructed.jpg"
+	HelperFunction(x)
+	opImg = cartoon(filename,param)
 	op2_img = cv2.cvtColor(opImg, cv2.COLOR_RGB2BGR)
 	filename = "reconstructed1.jpg"
 	cv2.imwrite(filename, op2_img)
@@ -385,7 +411,7 @@ def getDataOilPaint():
 	param = request.json['parameter']
 	HelperFunction(x)
 	filename = "reconstructed.jpg" 
-	opImg = oilPaint(filename)
+	opImg = oilPaint(filename,param)
 	filename = "reconstructed1.jpg"
 	cv2.imwrite(filename, opImg)
 	return send_file(filename,as_attachment=True,mimetype='image/jpg')
@@ -398,7 +424,7 @@ def getDataPointLissim():
 	param = request.json['parameter']
 	HelperFunction(x)
 	filename = "reconstructed.jpg"
-	opImg = Pointillism(filename)
+	opImg = Pointillism(filename,param)
 	filename = "reconstructed1.jpg"
 	cv2.imwrite(filename, opImg)
 	return send_file(filename,as_attachment=True,mimetype='image/jpg')
